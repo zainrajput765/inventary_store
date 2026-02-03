@@ -1,0 +1,61 @@
+name: hamii
+description: Enterprise Resource Planning for Hamii Mobiles
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- State Management & Utils ---
+  provider: ^6.0.0
+  intl: ^0.18.0
+  uuid: ^4.0.0
+
+  # --- Database (Offline) ---
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path_provider: ^2.1.2
+  share_plus: ^10.0.0
+
+  # --- Hardware (Printer & PDF) ---
+  mobile_scanner: ^5.2.3
+  pdf: ^3.10.4
+  printing: ^5.11.0
+
+  # --- UI ---
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+  # --- Code Generation (Required for Isar Database) ---
+  isar_generator: ^3.1.0+1
+  build_runner: any
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo.jpg
+
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.jpg" # Replace with your actual image path
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/logo.jpg"
+    background_color: "#hex_code"
+    theme_color: "#hex_code"
+  windows:
+    generate: true
+    image_path: "assets/logo.jpg"
+    icon_size: 48 # Optional: adjust size if needed
