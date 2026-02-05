@@ -65,19 +65,7 @@ The application supports **offline operation**, making it ideal for shops with u
 
 ---
 
-## 📸 Screenshots
 
-> Add your screenshots in a folder named `screenshots/`
-
-| Dashboard & POS | Inventory |
-|:--:|:--:|
-| pos_screen.png | inventory.png |
-
-| Ledger | Reports |
-|:--:|:--:|
-| ledger.png | report.png |
-
----
 
 ## 📂 Project Structure
 
@@ -87,14 +75,17 @@ lib/
 ├── models/
 │   └── schema.dart           # Isar Database Collections
 ├── screens/
+│   ├── ledgers_pdf_screen.dart
 │   ├── inventory_screen.dart
 │   ├── pos_screen.dart
 │   ├── ledgers_screen.dart
 │   ├── reports_screen.dart
 │   ├── stock_list_screen.dart
+│   ├── setting_screen.dart
+│   ├── scanner_screen.dart
 │   └── login_screen.dart
 ├── services/
 │   ├── db_service.dart
 │   ├── cart_service.dart
 │   └── auth_service.dart
-└── assets/                   # Images & Logos
+                  
