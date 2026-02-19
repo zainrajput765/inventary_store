@@ -213,7 +213,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text("HAMII MOBILES", style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+                  pw.Text("HASSAN MOBILES", style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
                   pw.Text("Financial Report", style: pw.TextStyle(fontSize: 16, color: PdfColors.grey700)),
                 ],
               ),

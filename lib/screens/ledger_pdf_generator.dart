@@ -103,8 +103,8 @@ Future<Uint8List> generateLedgerPdf(Party party, List<Transaction> history) asyn
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-                pw.Text("HAMII MOBILES", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
-                pw.Text("Shop LG-30 Dpoint Plaza Gujranwala", style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                pw.Text("HASSAN MOBILES", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+                pw.Text("Shop LG-15 Dpoint Plaza Gujranwala", style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
                 pw.Text("0300-7444459", style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
               ]),
               pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.end, children: [
@@ -228,7 +228,7 @@ Future<Uint8List> generateLedgerPdf(Party party, List<Transaction> history) asyn
           ),
 
           pw.Spacer(),
-          pw.Center(child: pw.Text("Computer Generated Report - Hamii Mobiles", style: const pw.TextStyle(color: PdfColors.grey, fontSize: 8))),
+          pw.Center(child: pw.Text("Computer Generated Report - Hassan Mobiles", style: const pw.TextStyle(color: PdfColors.grey, fontSize: 8))),
         ];
       },
     ),

@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    "HAMII MOBILES",
+                    "HASSAN MOBILES",
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.2),
                   ),
                   const Text(
@@ -158,6 +158,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 50), // Spacer
+                  const Text(
+                      "Powered by Zedech",
+                      style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w500)
+                  ),
+                  const SizedBox(height: 10), // Bottom padding
                 ],
               ),
             ),

@@ -80,6 +80,8 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
   final tradeConditionCtrl = TextEditingController();
   final tradePriceCtrl = TextEditingController();
   final tradeSellCtrl = TextEditingController();
+  // FIXED: Default value matches Inventory Screen exactly
+  String tradePtaStatus = "PTA APPROVED";
 
   // Manual Return Controllers
   final retNameCtrl = TextEditingController();
@@ -144,7 +146,6 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
         actions: [
           Row(
             children: [
-              // Hide text on small screens
               if (!isSmallScreen)
                 Text(_isReturnMode ? "REFUND" : "SALE", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70)),
               Switch(
@@ -187,7 +188,7 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))],
               ),
-              constraints: BoxConstraints(maxHeight: constraints.maxHeight * 0.65), // Increased height slightly
+              constraints: BoxConstraints(maxHeight: constraints.maxHeight * 0.65),
               child: _buildControlSection(cart, false),
             ),
           ]);
@@ -226,7 +227,8 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
                 children: [
                   _buildSectionHeader("Customer Info", Icons.person),
                   const SizedBox(height: 10),
-                  TextField(controller: customerCtrl, decoration: _inputDecoration("Customer Name", Icons.account_circle)),
+                  // CAPITALIZATION ENFORCED
+                  TextField(controller: customerCtrl, textCapitalization: TextCapitalization.characters, decoration: _inputDecoration("Customer Name", Icons.account_circle)),
 
                   const SizedBox(height: 25),
 
@@ -244,13 +246,13 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
                         children: [
                           Row(children: [Icon(Icons.undo, color: Colors.red), SizedBox(width: 8), Text("Manual Return Entry", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red[800]))]),
                           const SizedBox(height: 5),
-                          Text("Manually add item if scanner not available.", style: TextStyle(fontSize: 11, color: Colors.red[300])),
+                          Text("Use if item is not found via search.", style: TextStyle(fontSize: 11, color: Colors.red[300])),
                           const SizedBox(height: 15),
-                          TextField(controller: retNameCtrl, decoration: _inputDecoration("Product Name", Icons.shopping_bag)),
+                          TextField(controller: retNameCtrl, textCapitalization: TextCapitalization.characters, decoration: _inputDecoration("Product Name", Icons.shopping_bag)),
                           const SizedBox(height: 10),
-                          TextField(controller: retImeiCtrl, decoration: _inputDecoration("IMEI (If Mobile)", Icons.qr_code)),
+                          TextField(controller: retImeiCtrl, textCapitalization: TextCapitalization.characters, decoration: _inputDecoration("IMEI (If Mobile)", Icons.qr_code)),
                           const SizedBox(height: 10),
-                          TextField(controller: retPriceCtrl, keyboardType: TextInputType.number, decoration: _inputDecoration("Refund Amount", Icons.money_off)),
+                          TextField(controller: retPriceCtrl, keyboardType: TextInputType.number, decoration: _inputDecoration("Refund Amount (After Cut)", Icons.money_off)),
                           const SizedBox(height: 15),
                           SizedBox(
                             width: double.infinity,
@@ -258,21 +260,10 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
                               onPressed: () {
                                 if (retNameCtrl.text.isNotEmpty && retPriceCtrl.text.isNotEmpty) {
                                   double price = double.tryParse(retPriceCtrl.text) ?? 0;
-
-                                  // --- CRITICAL FIX: FORCE QTY 1 SO CART ACCEPTS IT ---
-                                  Product p = Product()
-                                    ..name = retNameCtrl.text
-                                    ..sellPrice = price
-                                    ..costPrice = price
-                                    ..isMobile = retImeiCtrl.text.isNotEmpty
-                                    ..imei = retImeiCtrl.text
-                                    ..quantity = 1; // <--- FORCE QUANTITY TO 1
-
+                                  // Default to Approved if manual return
+                                  Product p = Product()..name = retNameCtrl.text.toUpperCase()..sellPrice = price..costPrice = price..isMobile = retImeiCtrl.text.isNotEmpty..imei = retImeiCtrl.text.isNotEmpty ? retImeiCtrl.text : null..quantity = 1;
                                   Provider.of<CartService>(context, listen: false).addToCart(p);
-
-                                  retNameCtrl.clear();
-                                  retImeiCtrl.clear();
-                                  retPriceCtrl.clear();
+                                  retNameCtrl.clear(); retImeiCtrl.clear(); retPriceCtrl.clear();
                                   _showModernSnackBar("Added to Return List", type: "INFO");
                                 } else {
                                   _showModernSnackBar("Enter Name and Amount", type: "WARNING");
@@ -345,26 +336,112 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
     ])));
   }
 
-  Widget _buildDetailedTradeInForm() { return Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: Colors.white, border: Border.all(color: primaryColor.withOpacity(0.2)), borderRadius: BorderRadius.circular(12)), child: Column(children: [TextField(controller: tradeBrandCtrl, decoration: _inputDecoration("Device Brand", Icons.branding_watermark)), const SizedBox(height: 10), TextField(controller: tradeNameCtrl, decoration: _inputDecoration("Device Name", Icons.phone_android)), const SizedBox(height: 10), TextField(controller: tradeImeiCtrl, decoration: _inputDecoration("IMEI / Serial", Icons.qr_code)), const SizedBox(height: 10), Row(children: [Expanded(child: TextField(controller: tradeColorCtrl, decoration: _inputDecoration("Color", Icons.color_lens))), const SizedBox(width: 10), Expanded(child: TextField(controller: tradeStorageCtrl, decoration: _inputDecoration("Storage", Icons.sd_storage)))]), const SizedBox(height: 10), TextField(controller: tradeConditionCtrl, decoration: _inputDecoration("Condition", Icons.star_half)), const Divider(height: 30), Text("Financials", style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold)), const SizedBox(height: 10), Row(children: [Expanded(child: TextField(controller: tradePriceCtrl, keyboardType: TextInputType.number, decoration: _inputDecoration("Buying Price", Icons.arrow_downward), onChanged: (v) => setState((){}))), const SizedBox(width: 10), Expanded(child: TextField(controller: tradeSellCtrl, keyboardType: TextInputType.number, decoration: _inputDecoration("Est. Resale", Icons.arrow_upward)))])])); }
+  Widget _buildDetailedTradeInForm() {
+    return Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(color: Colors.white, border: Border.all(color: primaryColor.withOpacity(0.2)), borderRadius: BorderRadius.circular(12)),
+        child: Column(children: [
+          TextField(controller: tradeBrandCtrl, textCapitalization: TextCapitalization.characters, decoration: _inputDecoration("Device Brand", Icons.branding_watermark)),
+          const SizedBox(height: 10),
+
+          // --- AUTOCOMPLETE FOR DEVICE NAME ---
+          LayoutBuilder(builder: (context, constraints) {
+            return Autocomplete<String>(
+              optionsBuilder: (TextEditingValue textEditingValue) async {
+                if (textEditingValue.text.length < 2) return const Iterable<String>.empty();
+                return await Provider.of<DbService>(context, listen: false).getProductNames(textEditingValue.text);
+              },
+              onSelected: (String selection) { tradeNameCtrl.text = selection; },
+              fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                if (textEditingController.text != tradeNameCtrl.text) textEditingController.text = tradeNameCtrl.text;
+                textEditingController.addListener(() { tradeNameCtrl.text = textEditingController.text; });
+                return TextField(
+                  controller: textEditingController, focusNode: focusNode, textCapitalization: TextCapitalization.characters,
+                  decoration: _inputDecoration("Device Name", Icons.phone_android),
+                );
+              },
+            );
+          }),
+          const SizedBox(height: 10),
+
+          TextField(controller: tradeImeiCtrl, textCapitalization: TextCapitalization.characters, decoration: _inputDecoration("IMEI / Serial", Icons.qr_code)),
+          const SizedBox(height: 10),
+          Row(children: [Expanded(child: TextField(controller: tradeColorCtrl, textCapitalization: TextCapitalization.characters, decoration: _inputDecoration("Color", Icons.color_lens))), const SizedBox(width: 10), Expanded(child: TextField(controller: tradeStorageCtrl, textCapitalization: TextCapitalization.characters, decoration: _inputDecoration("Storage", Icons.sd_storage)))]),
+          const SizedBox(height: 10),
+
+          // --- FIXED: PTA DROPDOWN (Matches Inventory Screen Exactly) ---
+          DropdownButtonFormField<String>(
+            value: tradePtaStatus,
+            decoration: _inputDecoration("PTA Status", Icons.shield),
+            items: const ["PTA APPROVED", "NON-PTA", "JV / LOCKED"]
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
+            onChanged: (v) => setState(() => tradePtaStatus = v!),
+          ),
+          const SizedBox(height: 10),
+
+          TextField(controller: tradeConditionCtrl, textCapitalization: TextCapitalization.characters, decoration: _inputDecoration("Condition", Icons.star_half)),
+          const Divider(height: 30), Text("Financials", style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold)), const SizedBox(height: 10),
+          Row(children: [Expanded(child: TextField(controller: tradePriceCtrl, keyboardType: TextInputType.number, decoration: _inputDecoration("Buying Price", Icons.arrow_downward), onChanged: (v) => setState((){}))), const SizedBox(width: 10), Expanded(child: TextField(controller: tradeSellCtrl, keyboardType: TextInputType.number, decoration: _inputDecoration("Est. Resale", Icons.arrow_upward)))])
+        ])
+    );
+  }
+
   Widget _buildTotalsDisplay(CartService cart) { double tradeInVal = double.tryParse(tradePriceCtrl.text) ?? 0; double finalTotal = cart.total - tradeInVal; return Column(children: [_summaryRow("Subtotal", cart.subtotal), _summaryRow("Discount", -cart.discount, isLink: true, onTap: _showDiscountDialog), if (tradeInVal > 0) _summaryRow("Trade-In Credit", -tradeInVal, color: Colors.green), const Divider(height: 30), Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("NET TOTAL", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)), Text("Rs ${finalTotal.toInt()}", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryColor))])]); }
   Widget _summaryRow(String label, double val, {bool isLink = false, VoidCallback? onTap, Color? color}) { return Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [InkWell(onTap: onTap, child: Text(label, style: TextStyle(color: isLink ? Colors.blue : Colors.grey[600], decoration: isLink ? TextDecoration.underline : null, fontWeight: FontWeight.w500))), Text("Rs ${val.toInt()}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color ?? Colors.black87))])); }
 
-  // --- LOGIC METHODS ---
   void _showDiscountDialog() { final discountCtrl = TextEditingController(); showDialog(context: context, builder: (ctx) => AlertDialog(title: const Text("Apply Discount"), content: TextField(controller: discountCtrl, keyboardType: TextInputType.number, decoration: _inputDecoration("Amount (Rs)", Icons.money_off)), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")), ElevatedButton(onPressed: () { Provider.of<CartService>(context, listen: false).setDiscount(double.tryParse(discountCtrl.text) ?? 0); Navigator.pop(ctx); }, child: const Text("Apply"))])); }
 
-  // --- RETURN LOGIC ---
-  void _showReturnDialog(CartService cart) {
+  // --- UPDATED RETURN DIALOG WITH ROBUST CASH DRAWER FILTER ---
+  void _showReturnDialog(CartService cart) async {
+    final db = Provider.of<DbService>(context, listen: false);
+    final accounts = await db.getPaymentAccounts();
+    String selectedAccount = "Cash Drawer";
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Confirm Return", style: TextStyle(color: Colors.red)),
-        content: Text("Refund Total: Rs ${cart.total.toInt()}\n\nItems will be added back to stock and amount will be deducted from Cash Drawer."),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")), ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white), onPressed: () { Navigator.pop(ctx); _finalizeReturn(cart); }, child: const Text("Confirm Refund"))],
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Confirm Return", style: TextStyle(color: Colors.red)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Refund Total: Rs ${cart.total.toInt()}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 15),
+              const Text("Select Source to Refund From:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 8),
+              // FIX: STRICT FILTER TO PREVENT DUPLICATES
+              DropdownButtonFormField<String>(
+                value: selectedAccount,
+                decoration: _inputDecoration("Refund Source", Icons.account_balance_wallet),
+                items: accounts
+                    .where((a) => a.name.trim().toUpperCase() != "CASH DRAWER") // Strict Filter
+                    .map((a) => DropdownMenuItem(value: a.name, child: Text(a.name)))
+                    .toList()
+                  ..add(const DropdownMenuItem(value: "Cash Drawer", child: Text("Cash Drawer"))),
+                onChanged: (v) => setDialogState(() => selectedAccount = v!),
+              ),
+              const SizedBox(height: 10),
+              Text("Items will be added back to stock.", style: TextStyle(fontSize: 12, color: Colors.red[300])),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              onPressed: () {
+                Navigator.pop(ctx);
+                _finalizeReturn(cart, selectedAccount);
+              },
+              child: const Text("Confirm Refund"),
+            )
+          ],
+        ),
       ),
     );
   }
 
-  void _finalizeReturn(CartService cart) async {
+  void _finalizeReturn(CartService cart, String paymentSource) async {
     setState(() => isProcessing = true);
     final db = Provider.of<DbService>(context, listen: false);
     double totalRefund = cart.total;
@@ -372,46 +449,64 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
     try {
       for (var item in cart.items) {
         await db.processReturn(
-            productName: item.product.name,
-            refundAmount: item.price,
-            originalCost: item.product.costPrice,
-            customerName: customerCtrl.text.isEmpty ? "Walk-in Customer" : customerCtrl.text,
-            productId: item.product.id,
-            imei: item.product.imei,
-            isDealerReturn: false
+          productName: item.product.name,
+          refundAmount: item.price,
+          originalCost: item.product.costPrice,
+          customerName: customerCtrl.text.isEmpty ? "Walk-in Customer" : customerCtrl.text,
+          productId: item.product.id,
+          imei: item.product.imei,
+          isDealerReturn: false,
+          refundAccount: paymentSource,
         );
       }
-      final receipt = ReceiptData(items: List.from(cart.items), total: -totalRefund, subtotal: -cart.subtotal, discount: 0, tradeInAmount: 0, paymentMethod: "Refund (Cash)", customerName: customerCtrl.text.isEmpty ? "Walk-in Customer" : customerCtrl.text, date: DateTime.now(), paidAmount: -totalRefund, cashPaid: -totalRefund, bankPaid: 0, balanceDue: 0, isReturn: true);
+      final receipt = ReceiptData(items: List.from(cart.items), total: -totalRefund, subtotal: -cart.subtotal, discount: 0, tradeInAmount: 0, paymentMethod: "Refund ($paymentSource)", customerName: customerCtrl.text.isEmpty ? "Walk-in Customer" : customerCtrl.text, date: DateTime.now(), paidAmount: -totalRefund, cashPaid: -totalRefund, bankPaid: 0, balanceDue: 0, isReturn: true);
       cart.clearCart(); _clearInputs(); setState(() => isProcessing = false); _showModernSnackBar("Return Processed Successfully", type: "SUCCESS"); _showReceiptPreview(receipt);
     } catch (e) { setState(() => isProcessing = false); _showModernSnackBar("Error: $e", type: "ERROR"); }
   }
 
-  // --- SCANNER HANDLER (SMART LOGIC FOR RETURNS) ---
   void _handleScan(String code) async {
     final db = Provider.of<DbService>(context, listen: false);
     final cart = Provider.of<CartService>(context, listen: false);
 
-    // IF IN RETURN MODE: Search specifically for items by IMEI
     if (_isReturnMode) {
       final allProducts = await db.isar.products.filter().imeiEqualTo(code).findAll();
       if (allProducts.isNotEmpty) {
         var p = allProducts.first;
 
-        // --- NEW CHECK: PREVENT RETURNING IN-STOCK MOBILE ---
         if (p.isMobile && p.quantity > 0) {
           _showModernSnackBar("Cannot return In-Stock Mobile. Item must be Sold first.", type: "WARNING");
           return;
         }
 
-        // --- CRITICAL FIX: FORCE QTY 1 FOR RETURN ---
-        p.quantity = 1; // Trick the cart to accept it
+        // --- ASK FOR REFUND AMOUNT (CUT) ---
+        TextEditingController amountCtrl = TextEditingController(text: p.sellPrice.toInt().toString());
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Enter Refund Amount"),
+            content: TextField(
+              controller: amountCtrl,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: "Final Refund Value (After Cut)"),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Confirm"),
+              )
+            ],
+          ),
+        );
+
+        p.quantity = 1;
+        p.sellPrice = double.tryParse(amountCtrl.text) ?? 0; // Update price to Refund Value
         cart.addToCart(p);
         _showModernSnackBar("Item added to Refund list", type: "INFO");
         return;
       }
     }
 
-    // Default Sale Search
     final products = await db.searchProducts(code).first;
     if (products.isNotEmpty) {
       cart.addToCart(products.first);
@@ -420,7 +515,6 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
     }
   }
 
-  // --- SEARCH DIALOG (UPDATED FOR RETURNS) ---
   void _showProductSearch() {
     TextEditingController searchCtrl = TextEditingController();
 
@@ -440,6 +534,7 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
                         child: TextField(
                             controller: searchCtrl,
                             autofocus: true,
+                            textCapitalization: TextCapitalization.characters,
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                                 hintText: _isReturnMode ? "Search SOLD Items..." : "Search Stock...",
@@ -461,7 +556,6 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
                                 if (searchCtrl.text.isEmpty) {
                                   searchFuture = Future.value([]);
                                 } else {
-                                  // --- FILTER: ONLY SOLD MOBILES (Qty 0) OR ACCESSORIES ---
                                   searchFuture = db.isar.products.filter()
                                       .group((q) => q
                                       .nameContains(searchCtrl.text, caseSensitive: false)
@@ -470,9 +564,9 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
                                   )
                                       .and()
                                       .group((q) => q
-                                      .quantityEqualTo(0) // SOLD PHONES
+                                      .quantityEqualTo(0)
                                       .or()
-                                      .isMobileEqualTo(false) // ACCESSORIES (Can return anytime)
+                                      .isMobileEqualTo(false)
                                   )
                                       .findAll();
                                 }
@@ -497,11 +591,26 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
                                               title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                                               subtitle: Text("${p.brand} ${p.imei != null ? 'IMEI: ${p.imei}' : ''}\nQty: ${p.quantity}"),
                                               trailing: Text("Rs ${p.sellPrice.toInt()}", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
-                                              onTap: () {
-                                                // --- CRITICAL FIX: FORCE QTY 1 IF RETURNING SOLD ITEM ---
-                                                if (_isReturnMode && p.quantity == 0) {
-                                                  p.quantity = 1;
+                                              onTap: () async {
+                                                if (_isReturnMode) {
+                                                  TextEditingController amountCtrl = TextEditingController(text: p.sellPrice.toInt().toString());
+                                                  await showDialog(
+                                                      context: context,
+                                                      builder: (subCtx) => AlertDialog(
+                                                        title: const Text("Confirm Refund Amount"),
+                                                        content: TextField(
+                                                          controller: amountCtrl,
+                                                          keyboardType: TextInputType.number,
+                                                          autofocus: true,
+                                                          decoration: const InputDecoration(labelText: "Refund Amount (Deduct Cut if any)"),
+                                                        ),
+                                                        actions: [ElevatedButton(onPressed: () => Navigator.pop(subCtx), child: const Text("Add to List"))],
+                                                      )
+                                                  );
+                                                  p.sellPrice = double.tryParse(amountCtrl.text) ?? 0;
+                                                  if (p.quantity == 0) p.quantity = 1;
                                                 }
+
                                                 Provider.of<CartService>(context, listen: false).addToCart(p);
                                                 Navigator.pop(ctx);
                                               }
@@ -520,14 +629,12 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
     );
   }
 
-  // --- CHECKOUT LOGIC: HIDE BANK IF NO ACCOUNTS ---
   void _showDetailedCheckoutDialog(CartService cart) async {
     double tradeInVal = double.tryParse(tradePriceCtrl.text) ?? 0;
     double netPayable = cart.total - tradeInVal;
 
     final db = Provider.of<DbService>(context, listen: false);
     final accounts = await db.getPaymentAccounts();
-    // Logic: Only show extra tabs if there's more than just "Cash Drawer"
     bool hasBankAccounts = accounts.length > 1;
 
     String paymentMode = "Cash";
@@ -550,7 +657,6 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
             title: const Text("Checkout Payment", style: TextStyle(fontWeight: FontWeight.bold)),
             content: SingleChildScrollView(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                // CONDITIONAL TABS
                 if (hasBankAccounts)
                   Row(children: [_paymentModeTab("Cash", Icons.money, paymentMode, (v) => setDialogState(() => paymentMode = v)), const SizedBox(width: 8), _paymentModeTab("Bank", Icons.account_balance, paymentMode, (v) => setDialogState(() => paymentMode = v)), const SizedBox(width: 8), _paymentModeTab("Split", Icons.call_split, paymentMode, (v) => setDialogState(() => paymentMode = v))])
                 else
@@ -608,15 +714,15 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
     double tradeVal = double.tryParse(tradePriceCtrl.text) ?? 0;
 
     if (tradeVal > 0) {
-      String brand = tradeBrandCtrl.text.trim();
+      String brand = tradeBrandCtrl.text.trim().toUpperCase();
       String category = (brand.toLowerCase().contains("apple") || brand.toLowerCase().contains("iphone")) ? "iPhone" : "Android";
-      tradeProduct = Product()..name = tradeNameCtrl.text..brand = brand..imei = tradeImeiCtrl.text..costPrice = tradeVal..sellPrice = double.tryParse(tradeSellCtrl.text) ?? tradeVal..quantity = 1..isMobile = true..color = tradeColorCtrl.text..memory = tradeStorageCtrl.text..condition = tradeConditionCtrl.text.isEmpty ? "Used" : tradeConditionCtrl.text..category = category;
-      tradeItem = MobileItem()..imei = tradeImeiCtrl.text..productName = tradeNameCtrl.text..status = "IN_STOCK"..specificCostPrice = tradeVal;
+      tradeProduct = Product()..name = tradeNameCtrl.text.toUpperCase()..brand = brand..imei = tradeImeiCtrl.text.toUpperCase()..costPrice = tradeVal..sellPrice = double.tryParse(tradeSellCtrl.text) ?? tradeVal..quantity = 1..isMobile = true..color = tradeColorCtrl.text.toUpperCase()..memory = tradeStorageCtrl.text.toUpperCase()..condition = tradeConditionCtrl.text.isEmpty ? "Used" : tradeConditionCtrl.text.toUpperCase()..category = category..ptaStatus = tradePtaStatus;
+      tradeItem = MobileItem()..imei = tradeImeiCtrl.text.toUpperCase()..productName = tradeNameCtrl.text.toUpperCase()..status = "IN_STOCK"..specificCostPrice = tradeVal;
     }
 
     try {
-      await db.processSale(cart.items, cart.total, cart.discount, cash, bank, bankName.isEmpty ? null : bankName, customerCtrl.text, tradeInAmount: tradeVal, tradeInDetail: tradeVal > 0 ? "${tradeNameCtrl.text} (${tradeImeiCtrl.text})" : null, tradeInProduct: tradeProduct, tradeInItem: tradeItem);
-      final receipt = ReceiptData(items: List.from(cart.items), total: total + tradeVal, subtotal: cart.subtotal, discount: cart.discount, tradeInAmount: tradeVal, tradeInModel: tradeNameCtrl.text, tradeInImei: tradeImeiCtrl.text, paymentMethod: balance > 0 ? "Credit/Split" : "Paid", customerName: customerCtrl.text.isEmpty ? "Walk-in Customer" : customerCtrl.text, date: DateTime.now(), paidAmount: cash + bank, cashPaid: cash, bankPaid: bank, balanceDue: balance > 0 ? balance : 0);
+      await db.processSale(cart.items, cart.total, cart.discount, cash, bank, bankName.isEmpty ? null : bankName, customerCtrl.text.toUpperCase(), tradeInAmount: tradeVal, tradeInDetail: tradeVal > 0 ? "${tradeNameCtrl.text} (${tradeImeiCtrl.text})" : null, tradeInProduct: tradeProduct, tradeInItem: tradeItem);
+      final receipt = ReceiptData(items: List.from(cart.items), total: total + tradeVal, subtotal: cart.subtotal, discount: cart.discount, tradeInAmount: tradeVal, tradeInModel: tradeNameCtrl.text, tradeInImei: tradeImeiCtrl.text, paymentMethod: balance > 0 ? "Credit/Split" : "Paid", customerName: customerCtrl.text.isEmpty ? "Walk-in Customer" : customerCtrl.text.toUpperCase(), date: DateTime.now(), paidAmount: cash + bank, cashPaid: cash, bankPaid: bank, balanceDue: balance > 0 ? balance : 0);
       cart.clearCart(); _clearInputs(); setState(() => isProcessing = false); _showReceiptPreview(receipt);
     } catch (e) { setState(() => isProcessing = false); _showModernSnackBar("Error: $e", type: "ERROR"); }
   }
@@ -629,7 +735,7 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
   Future<Uint8List> _generatePdf(ReceiptData data, PdfPageFormat format) async {
     final doc = pw.Document();
     doc.addPage(pw.Page(pageFormat: PdfPageFormat.roll80, build: (pw.Context context) { return pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.center, children: [
-      pw.Text("HAMII MOBILES", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+      pw.Text("HASSAN MOBILES", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
       pw.Text(shopAddress, textAlign: pw.TextAlign.center, style: const pw.TextStyle(fontSize: 10)),
       pw.Text("Tel: $shopPhone", style: const pw.TextStyle(fontSize: 10)),
       pw.Divider(),
@@ -643,7 +749,7 @@ class _PosScreenState extends State<PosScreen> with SingleTickerProviderStateMix
       if(data.discount > 0) _printRow("Discount", -data.discount),
       if(data.tradeInAmount > 0) ...[pw.Divider(borderStyle: pw.BorderStyle.dashed), pw.Text("Trade-In Device:", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)), pw.Text("${data.tradeInModel}", style: const pw.TextStyle(fontSize: 10)), pw.Text("IMEI: ${data.tradeInImei}", style: const pw.TextStyle(fontSize: 10)), _printRow("Trade-In Value", -data.tradeInAmount)],
       pw.Divider(thickness: 1.5),
-      pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text("TOTAL", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)), pw.Text("${data.total.toInt().abs()}", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14))]), // Absolute for display
+      pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text("TOTAL", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)), pw.Text("${data.total.toInt().abs()}", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14))]),
       pw.SizedBox(height: 5),
       if(data.paidAmount != 0) _printRow("Amount Paid", data.paidAmount),
       if(data.balanceDue > 0) _printRow("Balance Due", data.balanceDue),

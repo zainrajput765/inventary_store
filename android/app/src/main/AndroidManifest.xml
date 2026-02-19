@@ -14,7 +14,7 @@
     <application
         android:label="Hamii Mobiles"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/ic_launcher">
 
         <activity
             android:name=".MainActivity"

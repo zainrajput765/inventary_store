@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:isar/isar.dart';
 import '../services/db_service.dart';
 import '../models/schema.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -151,6 +154,65 @@ class SettingsScreen extends StatelessWidget {
           _buildSectionHeader(context, "Data Management", primaryColor),
           _buildSettingsCard(
             children: [
+              // --- UPDATED BACKUP BUTTON (SAVE TO LOCAL) ---
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.save_alt, color: Colors.blue), // Icon changed to Save
+                ),
+                title: const Text("Save Backup Locally", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text("Save database file to your device"),
+                onTap: () async {
+                  try {
+                    // 1. Create the backup file internally
+                    String internalPath = await db.createBackup();
+
+                    // 2. Open "Save As" dialog for the user to pick location
+                    String? outputFile = await FilePicker.platform.saveFile(
+                      dialogTitle: 'Select Location to Save Backup',
+                      fileName: 'hassan_backup_${DateTime.now().millisecondsSinceEpoch}.isar',
+                    );
+
+                    // 3. If user picked a location, copy the file there
+                    if (outputFile != null) {
+                      await File(internalPath).copy(outputFile);
+                      if (context.mounted) {
+                        _showModernSnackBar(context, "Backup Saved Successfully!", type: "SUCCESS");
+                      }
+                    } else {
+                      // User cancelled the picker
+                    }
+                  } catch (e) {
+                    if (context.mounted) _showModernSnackBar(context, "Backup Failed: $e", type: "ERROR");
+                  }
+                },
+              ),
+              const Divider(height: 1),
+
+              // --- RESTORE BUTTON (UNCHANGED) ---
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.cloud_download, color: Colors.orange),
+                ),
+                title: const Text("Restore Data", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text("Import database from file"),
+                onTap: () async {
+                  FilePickerResult? result = await FilePicker.platform.pickFiles();
+                  if (result != null) {
+                    try {
+                      await db.restoreBackup(result.files.single.path!);
+                      if (context.mounted) _showModernSnackBar(context, "Data Restored Successfully!", type: "SUCCESS");
+                    } catch (e) {
+                      if (context.mounted) _showModernSnackBar(context, "Restore Failed: $e", type: "ERROR");
+                    }
+                  }
+                },
+              ),
+              const Divider(height: 1),
+
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
@@ -168,9 +230,20 @@ class SettingsScreen extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                const Text("HAMII MOBILES", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.grey)),
+                const Text("HASSAN MOBILES", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.grey)),
                 const SizedBox(height: 5),
                 Text("Version 2.0 (Local Offline)", style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                const SizedBox(height: 15),
+                // --- YOUR BRANDING HERE ---
+                const Text(
+                    "Manufactured by Zedech",
+                    style: TextStyle(
+                        color: Color(0xFF2B3A67), // Use your primary color
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13
+                    )
+                ),
+                const SizedBox(height: 20),
               ],
             ),
           )
@@ -267,13 +340,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showAddAccountDialog(BuildContext context, DbService db, Color primary, Color secondary) async {
-    // --- UPDATED LOGIC: CHECK LIMIT BEFORE SHOWING DIALOG ---
     final currentAccounts = await db.getPaymentAccounts();
-    // Assuming Cash Drawer is 1, so if 5 total (1 cash + 4 banks), we stop.
-    // Or if the logic is strictly 4 custom accounts.
-    // The requirement says "Only 4 accounts allowed".
-    // Usually means Cash Drawer + 3 others or just 4 slots.
-    // If the DB logic is `count < 4`, we must check `count`.
     if (currentAccounts.length >= 4) {
       if (context.mounted) _showModernSnackBar(context, "Maximum 4 Accounts Allowed!", type: "WARNING");
       return;

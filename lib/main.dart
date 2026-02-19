@@ -34,7 +34,7 @@ class MobileMartApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'HAMII Mobiles',
+      title: 'HASSAN Mobiles',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
       home: const LoginScreen(),
@@ -221,14 +221,14 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                       child: ClipRRect(borderRadius: BorderRadius.circular(50), child: Image.asset('assets/logo.jpg', width: 80, height: 80, fit: BoxFit.cover, errorBuilder: (c,e,s) => const Icon(Icons.store, color: Colors.grey, size: 50))),
                     ),
                     const SizedBox(height: 15),
-                    const Text("Hamii Mobiles", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))
+                    const Text("Hassan Mobiles", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))
                   ],
                 ),
               ),
               destinations: _buildDestinations(auth.isAdmin),
               trailing: Expanded(child: Align(alignment: Alignment.bottomCenter, child: Padding(padding: const EdgeInsets.only(bottom: 20.0), child: TextButton.icon(onPressed: () { Provider.of<AuthService>(context, listen: false).logout(); Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen())); }, icon: const Icon(Icons.logout, color: Colors.redAccent), label: const Text("Logout", style: TextStyle(color: Colors.redAccent)))))),
             ),
-          Expanded(child: Scaffold(appBar: !isWideScreen ? AppBar(title: const Text("HAMII MOBILES")) : null, drawer: !isWideScreen ? _buildMobileDrawer(auth.isAdmin) : null, body: screens[_selectedIndex])),
+          Expanded(child: Scaffold(appBar: !isWideScreen ? AppBar(title: const Text("HASSAN MOBILES")) : null, drawer: !isWideScreen ? _buildMobileDrawer(auth.isAdmin) : null, body: screens[_selectedIndex])),
         ],
       ),
     );
@@ -273,7 +273,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                 ),
               ),
             ),
-            accountName: const Text("HAMII Mobiles", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: secondary)),
+            accountName: const Text("HASSAN Mobiles", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: secondary)),
             accountEmail: const Text("Inventory System"),
           ),
           Expanded(
